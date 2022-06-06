@@ -110,3 +110,48 @@ print('The Binomial Tree Asian Call option price is: ', binomial)
 log_n = Asian_log_normal(S0,K,r,sigma,T)
 print('The Log-Normal Asian Call option price is: ', log_n)
 #==========================================================================================#
+
+# Pricing Geometric-Average Options
+def bsm(S0, K, T, r, q, sigma, opType):
+    d1 = (np.log(S0/K) + (r - q + 0.5*sigma**2) * T) / (sigma*np.sqrt(T))
+    d2 = d1 - (sigma*np.sqrt(T))
+    c = (S0 * norm.cdf(d1)) - (K*np.exp(-r*T)*norm.cdf(d2))
+    if opType=='call':
+        return c
+    elif opType=='put':
+        p = c - S0 + (K*np.exp(-r*T))
+        return p
+#==========================================================================================#    
+    
+# continously-sampled Geometric Average-Price call option
+
+def cont_geom_ave_asian(S0, K, T, r, q, sigma, opType):
+    V0 = S0 * np.exp( -T * ((6*r + 6*q + sigma**2) / 12)  )
+    sigma_avg = sigma / np.sqrt(3)
+    prc = bsm(V0, K, T, r, q, sigma_avg, opType)
+    return prc
+
+#==========================================================================================#
+
+# discretely-sampled Geometric Average-Price call option
+
+def disc_geom_ave_asian(S0, K, T, r, q, sigma, opType, N):
+    dt = T / N
+    v = r - q - 0.5*sigma**2
+    V0 = S0 * np.exp(-r*T) * np.exp(((N+1)*v*dt*0.5) + ((dt*(N+1)*(2*N+1)*sigma**2) / (12*N)))
+    sigma_avg = sigma * (N**-1.5) * np.sqrt(N*(N+1)*(2*N+1)/6)
+    prc = bsm(V0, K, T, r, q, sigma_avg, opType)
+    return prc
+#==========================================================================================#
+
+
+S0, K, T, r, q, sigma, opType, N = 100, 95, 1, 0.03, 0.0, 0.35, 'call', 200
+    
+cont = cont_geom_ave_asian(S0, K, T, r, q, sigma, opType) 
+disc = disc_geom_ave_asian(S0, K, T, r, q, sigma, opType, N)
+
+print('\nThe price of a continously-sampled geometric-average asian call option is:', round(cont,4))
+print('\nThe price of a discretely-sampled geometric-average asian call option is:', round(disc,4))
+
+#==========================================================================================#
+
